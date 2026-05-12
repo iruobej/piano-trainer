@@ -6,6 +6,10 @@ function App() {
   const [activeNotes, setActiveNotes] = useState<number[]>([]);
   const [midiMessage, setMIDIMessage] = useState<string>("");
   const [connected, setConnected] = useState<boolean>(false);
+
+  // Track player's score and highscore
+  const [score, setScore] = useState<number>(0);
+  const [highscore, setHighscore] = useState<number>(0);
   //all 12 notes of scale
   const notes = ["C", "C#", "D", "E♭", "E", "F", "F#", "G", "A♭", "A", "B♭", "B"];
   useEffect(() => {
@@ -26,6 +30,8 @@ function App() {
           setMIDIMessage("MIDI Device Connected");
           setConnected(true);
         }
+        setFinished(true);
+        setRunning(false);
       }
 
       //Scan for devices immediately
@@ -143,7 +149,8 @@ function App() {
 
   //Controls the countdown timer
   const [running, setRunning] = useState(false);
-
+  // To signal when the user is finishing a session
+  const [finished, setFinished] = useState(true);
 
   //timer value after which a new chord is generated
   const [selectedNumber, setSelectedNumber] = useState("5");
@@ -205,12 +212,14 @@ function App() {
       setResultMessage("Correct!");
       //Pause timer
       setRunning(false);
+      setScore(prev => prev + 3);
       //Wait 3 seconds before generating new chord
       setTimeout(generateChord, 3000);
 
       return;
     } else if (!isMatch && countdownNumber === 0){
       setResultMessage("Incorrect.");
+      setScore(prev => prev - 1);
     }
   }, [playedNoteNames, chord]);
 
@@ -226,8 +235,9 @@ function App() {
     <>
       <Navbar/>
       <div>
+        {connected && <p>Highscore: {highscore}</p>}
+        {connected && <p>Score: {score}</p>}
         <h1>Chord</h1>
-
         {/* Show chord name */}
         <p className='chordName'>
           {Array.from(selectedChords).length <= 0 ? "No Chord Types Selected" : chord ? chord.name : "Press Start"}
@@ -254,15 +264,22 @@ function App() {
 
         <p>Selected time: {selectedNumber} seconds</p>
         {/* Button to get a new chord */}
-        <button className={running ? "finishButton" : "startButton"} onClick={() => {
-          if (running) {
+        <button className={finished ? "startButton" : "finishButton"} onClick={() => {
+          // Because setFinished(!finished) doesnt update immediately, must assign to variable and use that instead (nextFinished)
+          const nextFinished = !finished; 
+          setFinished(nextFinished);
+
+          if (nextFinished) {
+            //Stop timer
             setRunning(false);
-          } else {
-            generateChord();
-          }
+            if (score > highscore) {
+              setHighscore(score);
+            }
+            setScore(0);
+          } else {generateChord();}
         }}>
 
-          {running? "Finish" : "Start"}
+          {finished? "Start" : "Finish"}
         </button>
         <p><i className="fa-solid fa-circle-info"></i> {midiMessage}</p>
 
