@@ -31,6 +31,7 @@ Connect your MIDI keyboard and improve your chord recognition, accuracy, and spe
 - **Vite**
 - **Web MIDI API**
 - **CSS**
+- **HTML**
 
 ---
 
