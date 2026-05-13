@@ -4,6 +4,7 @@ import Navbar from './components/Navbar.tsx';
 
 function App() {
   const [activeNotes, setActiveNotes] = useState<number[]>([]);
+  const sortedActiveNotes = [...new Set(activeNotes)].sort((a, b) => a - b); //if a's MIDI note value is less than b's, a goes before b
   const [midiMessage, setMIDIMessage] = useState<string>("");
   const [connected, setConnected] = useState<boolean>(false);
 
@@ -197,16 +198,17 @@ function App() {
   //Generating result message for either pass or fail
   const [resultMessage, setResultMessage] = useState<string>("");
 
-  const playedNoteNames = activeNotes.map(n => notes[n % 12]);
-  const uniquePlayed = [...new Set(playedNoteNames)].sort();
+  const uniquePlayed = sortedActiveNotes.map(n => notes[n % 12]);
   
   useEffect(() => {
     if (!chord || resultMessage) return; // skip if a resultMessage already has a value and is thus being displayed on screen
 
-    const expected = [...chord.notes].sort();
-    const isMatch =
-      expected.length === uniquePlayed.length &&
-      expected.every((n, i) => n === uniquePlayed[i]);
+    const uniquePlayedSet = new Set(uniquePlayed);
+    const expectedSet = new Set(chord.notes);
+
+    const isMatch = 
+      uniquePlayedSet.size === expectedSet.size &&
+      [...uniquePlayedSet].every(n => expectedSet.has(n))
 
     if (isMatch) {
       setResultMessage("Correct!");
@@ -221,7 +223,7 @@ function App() {
       setResultMessage("Incorrect.");
       setScore(prev => prev - 1);
     }
-  }, [playedNoteNames, chord]);
+  }, [uniquePlayed, chord]);
 
   // Create a new random chord
   function generateChord() {
@@ -243,7 +245,7 @@ function App() {
           {Array.from(selectedChords).length <= 0 ? "No Chord Types Selected" : chord ? chord.name : "Press Start"}
         </p>
 
-        {connected && <p>Notes you are playing: [ {uniquePlayed} ]</p>}
+        {connected && <p>Notes you are playing: [ {uniquePlayed.join(", ")} ]</p>}
 
 
         {connected && <h2>{resultMessage}</h2>}
