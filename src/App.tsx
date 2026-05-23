@@ -3,16 +3,18 @@ import './App.css'
 import Navbar from './components/Navbar.tsx';
 
 function App() {
+  // Notes the user is currently playing
   const [activeNotes, setActiveNotes] = useState<number[]>([]);
   const sortedActiveNotes = [...new Set(activeNotes)].sort((a, b) => a - b); //if a's MIDI note value is less than b's, a goes before b
   const [midiMessage, setMIDIMessage] = useState<string>("");
   const [connected, setConnected] = useState<boolean>(false);
 
-  // Track player's score and highscore
+  // Track player's score 
   const [score, setScore] = useState<number>(0);
-  const [highscore, setHighscore] = useState<number>(0);
   //all 12 notes of scale
   const notes = ["C", "C#", "D", "E♭", "E", "F", "F#", "G", "A♭", "A", "B♭", "B"];
+
+  // useEffect to constantly check if a midi device has been connected/disconnected
   useEffect(() => {
       //Requesting access to any input that the browser detects
     if (navigator.requestMIDIAccess) {
@@ -33,6 +35,14 @@ function App() {
         }
         setFinished(true);
         setRunning(false);
+
+        var inputs = midi.inputs.values();
+
+        // inputs is an Iterator 
+        for (var input = inputs.next(); input && !input.done; input = inputs.next()) {
+            // each time there is a midi message call the onMIDIMessage function 
+            input.value.onmidimessage = onMIDIMessage;
+        }
       }
 
       //Scan for devices immediately
@@ -43,13 +53,6 @@ function App() {
         updateStatus();
       }
 
-      var inputs = midi.inputs.values();
-
-      // inputs is an Iterator 
-      for (var input = inputs.next(); input && !input.done; input = inputs.next()) {
-          // each time there is a midi message call the onMIDIMessage function 
-          input.value.onmidimessage = onMIDIMessage;
-      }
       console.log('MIDI connected');
     }
 
@@ -78,11 +81,31 @@ function App() {
     }
   }, []);
 
+  type PlayerData = {
+    highscore: number
+  }
+  // playerData will represent the localStorage
+  const [playerData, setPlayerData] = useState<PlayerData>(() => {
+    const saved = localStorage.getItem("playerData");
+
+    return saved
+      ? JSON.parse(saved)
+      : { highscore: 0 };
+  }); 
+
+  // saving user changes to storage
+  useEffect(() => {
+    localStorage.setItem('playerData', JSON.stringify(playerData))
+  }, [playerData]);
+
+  // | means union
   type ChordType = 
     | "major"
     | "minor"
     | "dim"
     | "aug"
+    | "sus2"
+    | "sus4"
     | "maj7"
     | "min7"
     | "aug7"
@@ -101,6 +124,8 @@ function App() {
     minor: [0, 3, 7], 
     dim: [0, 3, 6],
     aug: [0, 4, 8],
+    sus2: [0, 2, 7],
+    sus4: [0, 5, 7],
     maj7: [0, 4, 7, 11], 
     min7: [0, 3, 7, 10], 
     aug7: [0, 4, 8, 10], 
@@ -174,6 +199,15 @@ function App() {
     });
   }
 
+  function isolateChord(chord: ChordType) {
+    setSelectedChords(prev => {
+      const newSet = [...prev];
+      const filtered =  newSet.filter(x => x === chord);
+      const filteredSet = new Set(filtered);
+      return filteredSet;
+    })
+  }
+
   //Handling countdown
   useEffect(() => {
     if (!running) return;
@@ -237,7 +271,7 @@ function App() {
     <>
       <Navbar/>
       <div>
-        {connected && <p>Highscore: {highscore}</p>}
+        {connected && <p>Highscore: {playerData.highscore}</p>}
         {connected && <p>Score: {score}</p>}
         <h1>Chord</h1>
         {/* Show chord name */}
@@ -274,8 +308,11 @@ function App() {
           if (nextFinished) {
             //Stop timer
             setRunning(false);
-            if (score > highscore) {
-              setHighscore(score);
+            if (score > playerData.highscore) {
+              setPlayerData(prev => ({
+                ...prev,
+                highscore: score
+              }));
             }
             setScore(0);
           } else {generateChord();}
@@ -288,14 +325,19 @@ function App() {
         {/*Checkbox list - allows users to choose what chords they want to be tested on */}
         {(Object.keys(chordTypes) as ChordType[]).map(c => (
           <>
+            <label htmlFor={c}>{c}</label>
             <input type="checkbox" 
               name={c} 
               value={c} 
               id={c} 
               checked={selectedChords.has(c)} 
               onChange={() => toggleChord(c)}
+              //handling right click event
+              onContextMenu={(e) => {
+                e.preventDefault(); //stops default menu coming up
+                isolateChord(c);
+              }}
             />
-            <label htmlFor={c}>{c}</label>
           </>
         ))}
       </div>
