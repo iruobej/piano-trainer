@@ -1,190 +1,52 @@
-import { useState, useEffect } from 'react'
+// Everything that affects the UI is in this file
+import { useState } from 'react'
 import './App.css'
 import Navbar from './components/Navbar.tsx';
+import useMidi from './externalFiles/useMidi.ts';
+import useGameLogic from './externalFiles/useGameLogic.ts';
+import type { ChordType } from "./externalFiles/musicTheory.ts";
+import { chordTypes } from "./externalFiles/musicTheory.ts";
+import usePlayerData from './externalFiles/playerLogic.ts';
 
 function App() {
   // Notes the user is currently playing
   const [activeNotes, setActiveNotes] = useState<number[]>([]);
-  const sortedActiveNotes = [...new Set(activeNotes)].sort((a, b) => a - b); //if a's MIDI note value is less than b's, a goes before b
   const [midiMessage, setMIDIMessage] = useState<string>("");
   const [connected, setConnected] = useState<boolean>(false);
 
   // Track player's score 
-  const [score, setScore] = useState<number>(0);
-  //all 12 notes of scale
-  const notes = ["C", "C#", "D", "E♭", "E", "F", "F#", "G", "A♭", "A", "B♭", "B"];
-
-  // useEffect to constantly check if a midi device has been connected/disconnected
-  useEffect(() => {
-      //Requesting access to any input that the browser detects
-    if (navigator.requestMIDIAccess) {
-        navigator.requestMIDIAccess()
-            .then(success, failure);
-    }
-
-    // 'midi' displays a MIDIAccess object, the key to recieving midi data
-    // The object itself provides an interface to any MIDI devices attached
-    function success (midi: MIDIAccess) {
-      const updateStatus = () => {
-        if (midi.inputs.size < 1) {
-          setMIDIMessage("No MIDI device connected");
-          setConnected(false);
-        } else {
-          setMIDIMessage("MIDI Device Connected");
-          setConnected(true);
-        }
-        setFinished(true);
-        setRunning(false);
-
-        var inputs = midi.inputs.values();
-
-        // inputs is an Iterator 
-        for (var input = inputs.next(); input && !input.done; input = inputs.next()) {
-            // each time there is a midi message call the onMIDIMessage function 
-            input.value.onmidimessage = onMIDIMessage;
-        }
-      }
-
-      //Scan for devices immediately
-      updateStatus();
-
-      //Also scan and update status whenever a new device is connected
-      midi.onstatechange = () => {
-        updateStatus();
-      }
-
-      console.log('MIDI connected');
-    }
-
-    function failure () {
-        console.log('No access to your midi devices.');
-    }
-    
-    function onMIDIMessage(message: MIDIMessageEvent) {
-      const [status, note, velocity] = message.data!; //! means it is definitely not null
-
-      if (status >=240) return; //stops console from logging messages like 254 (sent regularly by keyboard to let browser know its still connected)
-
-      // Example: Detect note on (status 144) and note off (status 128)
-      // Note ON
-      if (status === 144 && velocity > 0) {
-          setActiveNotes(prev => {
-              if (prev.includes(note)) return prev; // avoid duplicates
-              return [...prev, note];
-          });
-      }
-
-      // Note OFF
-      if (status === 128 || (status === 144 && velocity === 0)) {
-          setActiveNotes(prev => prev.filter(n => n !== note));
-      }
-    }
-  }, []);
-
-  type PlayerData = {
-    highscore: number
-  }
-  // playerData will represent the localStorage
-  const [playerData, setPlayerData] = useState<PlayerData>(() => {
-    const saved = localStorage.getItem("playerData");
-
-    return saved
-      ? JSON.parse(saved)
-      : { highscore: 0 };
-  }); 
-
-  // saving user changes to storage
-  useEffect(() => {
-    localStorage.setItem('playerData', JSON.stringify(playerData))
-  }, [playerData]);
-
-  // | means union
-  type ChordType = 
-    | "major"
-    | "minor"
-    | "dim"
-    | "aug"
-    | "sus2"
-    | "sus4"
-    | "maj7"
-    | "min7"
-    | "aug7"
-    | "7"
-    | "dim7"
-    | "halfdim7"
-    | "minMaj7";
-
-  type Chord = {
-    name: string;
-    notes: string[];
-  }
-
-  const chordTypes: Record<ChordType, number[]> = {
-    major: [0, 4, 7],
-    minor: [0, 3, 7], 
-    dim: [0, 3, 6],
-    aug: [0, 4, 8],
-    sus2: [0, 2, 7],
-    sus4: [0, 5, 7],
-    maj7: [0, 4, 7, 11], 
-    min7: [0, 3, 7, 10], 
-    aug7: [0, 4, 8, 10], 
-    "7": [0, 4, 7, 10], 
-    dim7: [0, 3, 6, 9], 
-    halfdim7: [0, 3, 6, 10],
-    minMaj7: [0, 3, 7, 11]
-  };
-
-  
-
-  //Build a chord from a root note (from notes array) and type (from chordTypes)
-  function getChord(root: string, type: ChordType) : string[] {
-    // Find the index of the root note
-    const rootIndex = notes.indexOf(root);
-
-    // Create the chord notes using the intervals
-    return chordTypes[type].map((interval:number) => {
-      // Add interval and wrap around if needed
-      // Wrap around to keep midi notes above 12 in the same octave
-      const index = (rootIndex + interval) % 12;
-
-      // Return the note at that position
-      return notes[index];
-    });
-  }
-  // Generate a random chord (this is what will be displayed)
-  function getRandomChord(): Chord {
-    // Pick a random root note
-    const root = notes[Math.floor(Math.random() * notes.length)];
-
-    // Randomly pick a chord type
-    function getRandomChordType(): ChordType{
-      const types = Array.from(selectedChords);
-      return types[Math.floor(Math.random() * types.length)]; //e.g. types[Math.floor(0.34 * 10)] = types[3] = aug
-    }
-
-    const type: ChordType = getRandomChordType();
-    return {
-      name: `${root} ${type}`,     // e.g. "E minor"
-      notes: getChord(root, type) // e.g. ["E", "G", "B"]
-    };
-  }
-
-  // Store the current chord
-  const [chord, setChord] = useState<Chord | null>(null);
-
-  //Controls the countdown timer
-  const [running, setRunning] = useState(false);
+  const [score, setScore] = useState(0);
   // To signal when the user is finishing a session
   const [finished, setFinished] = useState(true);
+  const {playerData, setPlayerData} = usePlayerData();
 
   //timer value after which a new chord is generated
-  const [selectedNumber, setSelectedNumber] = useState("5");
-  const [countdownNumber, setCountdownNumber] = useState(Number(selectedNumber)); // to show time left
+  const [selectedNumber, setSelectedNumber] = useState(5);
+  
 
   const [selectedChords, setSelectedChords] = useState<Set<ChordType>>(
     new Set(Object.keys(chordTypes) as ChordType[])
   )
+
+  const {
+    chord,
+    uniquePlayed,
+    resultMessage,
+    countdownNumber,
+    setRunning,
+    generateChord
+  } = useGameLogic({
+    activeNotes,
+    selectedNumber,
+    selectedChords,
+    setScore
+  });
+
+  
+  //MIDI logic
+  useMidi({setActiveNotes, setMIDIMessage, setConnected, setFinished, setRunning, setScore});
+
+  
 
   // Modifying chords selected when user selects/deselects a chord
   function toggleChord(chord: ChordType) {
@@ -208,65 +70,8 @@ function App() {
     })
   }
 
-  //Handling countdown
-  useEffect(() => {
-    if (!running) return;
-
-    // Reset countdown for new chord
-    setCountdownNumber(Number(selectedNumber));
-
-    const interval = setInterval(() => {
-      setCountdownNumber(prev => {
-        if (prev <= 0) {
-          generateChord();
-          return Number(selectedNumber);
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    // Cleanup
-    return () => clearInterval(interval);
-  }, [running, selectedNumber, chord]); // include chord so new chord restarts countdown
-
-  //Generating result message for either pass or fail
-  const [resultMessage, setResultMessage] = useState<string>("");
-
-  const uniquePlayed = sortedActiveNotes.map(n => notes[n % 12]);
   
-  useEffect(() => {
-    if (!chord || resultMessage) return; // skip if a resultMessage already has a value and is thus being displayed on screen
-
-    const uniquePlayedSet = new Set(uniquePlayed);
-    const expectedSet = new Set(chord.notes);
-
-    const isMatch = 
-      uniquePlayedSet.size === expectedSet.size &&
-      [...uniquePlayedSet].every(n => expectedSet.has(n))
-
-    if (isMatch) {
-      setResultMessage("Correct!");
-      //Pause timer
-      setRunning(false);
-      setScore(prev => prev + 3);
-      //Wait 3 seconds before generating new chord
-      setTimeout(generateChord, 3000);
-
-      return;
-    } else if (!isMatch && countdownNumber === 0){
-      setResultMessage("Incorrect.");
-      setScore(prev => prev - 1);
-    }
-  }, [uniquePlayed, chord]);
-
-  // Create a new random chord
-  function generateChord() {
-    setChord(getRandomChord());
-    setCountdownNumber(Number(selectedNumber));
-    setRunning(true);
-
-    setResultMessage("");
-  }
+  
   return (
     <>
       <Navbar/>
@@ -291,7 +96,7 @@ function App() {
         <h2>Set time:</h2>
         <select 
           value={selectedNumber}
-          onChange={(e) => setSelectedNumber(e.target.value)}
+          onChange={(e) => setSelectedNumber(Number(e.target.value))}
         >
           {[...Array(60).keys()].map(i => (
             <option key={i + 1} value={(i + 1).toString()}>{i + 1}</option>
@@ -315,7 +120,7 @@ function App() {
               }));
             }
             setScore(0);
-          } else {generateChord();}
+          } else {if (selectedChords.size > 0) generateChord();}
         }}>
 
           {finished? "Start" : "Finish"}
@@ -324,7 +129,7 @@ function App() {
 
         {/*Checkbox list - allows users to choose what chords they want to be tested on */}
         {(Object.keys(chordTypes) as ChordType[]).map(c => (
-          <>
+          <div key={c}>
             <label htmlFor={c}>{c}</label>
             <input type="checkbox" 
               name={c} 
@@ -338,7 +143,7 @@ function App() {
                 isolateChord(c);
               }}
             />
-          </>
+          </div>
         ))}
       </div>
     </>
