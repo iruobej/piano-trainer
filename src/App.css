@@ -79,14 +79,17 @@ button {
   display: flex;
   justify-content: center;
   gap: 30px;
-  margin: 10px;
-  flex: 1;
-
 }
 
 .box {
   width:300px;
 }
+
+.disconnectedBox {
+  display: flex;
+  justify-content: center;
+}
+
 .correct {
   color: green;
 }

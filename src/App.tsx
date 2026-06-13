@@ -95,8 +95,8 @@ function App() {
         {connected && <p>Highscore: {playerData.highscore}</p>}
         {connected && <p>Score: {score}</p>}
         
-        <div className="horizontal">
-          <div className='box'></div>
+        <div className='horizontal'>
+          { connected && <div className='box'></div> }
           <div className='box'>
             <h1>Chord</h1>
             {/* Show chord name */}
@@ -140,7 +140,7 @@ function App() {
             </div>
           }
         </div>
-        {/* Button to get a new chord */}
+
         <button className={finished ? "startButton" : "finishButton"} onClick={() => {
           // Because setFinished(!finished) doesnt update immediately, must assign to variable and use that instead (nextFinished)
           const nextFinished = !finished; 
