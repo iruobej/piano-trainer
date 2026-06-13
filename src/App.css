@@ -42,3 +42,55 @@ button {
 .finishButton {
   background-color: red;
 }
+
+.checklist-container{
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.buttonList {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+.buttonList button {
+  background-color: rgb(19, 71, 154);
+}
+
+.infoBox {
+  background-color: rgb(157, 180, 219);
+  height: 170px;
+  width: 300px;
+  padding: 12px;
+  border-radius: 12px;
+  margin: 2px;
+}
+
+.mistakeBox {
+  background-color: rgb(157, 180, 219);
+}
+
+.noteHistory {
+  background-color: rgb(213, 187, 161);
+}
+
+.horizontal {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin: 10px;
+  flex: 1;
+
+}
+
+.box {
+  width:300px;
+}
+.correct {
+  color: green;
+}
+
+.incorrect {
+  color: red;
+}

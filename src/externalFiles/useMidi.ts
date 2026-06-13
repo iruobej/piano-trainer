@@ -2,13 +2,14 @@ import { useEffect } from "react";
 import type React from "react";
 type Props = {
     setActiveNotes: React.Dispatch<React.SetStateAction<number[]>>;
+    setAttemptNotes: React.Dispatch<React.SetStateAction<number[]>>;
     setMIDIMessage: React.Dispatch<React.SetStateAction<string>>;
     setConnected: React.Dispatch<React.SetStateAction<boolean>>;
     setFinished: React.Dispatch<React.SetStateAction<boolean>>;
     setRunning: React.Dispatch<React.SetStateAction<boolean>>;
     setScore: React.Dispatch<React.SetStateAction<number>>;
 }
-export default function useMidi({setActiveNotes, setMIDIMessage, setConnected, setFinished, setRunning, setScore}: Props) {
+export default function useMidi({setActiveNotes, setAttemptNotes, setMIDIMessage, setConnected, setFinished, setRunning, setScore}: Props) {
     // useEffect to constantly check if a midi device has been connected/disconnected
       useEffect(() => {
           //Requesting access to any input that the browser detects
@@ -65,6 +66,10 @@ export default function useMidi({setActiveNotes, setMIDIMessage, setConnected, s
           // Note ON
           if (status === 144 && velocity > 0) {
               setActiveNotes(prev => {
+                  if (prev.includes(note)) return prev; // avoid duplicates
+                  return [...prev, note];
+              });
+              setAttemptNotes(prev => {
                   if (prev.includes(note)) return prev; // avoid duplicates
                   return [...prev, note];
               });
