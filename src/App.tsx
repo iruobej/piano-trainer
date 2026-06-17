@@ -96,7 +96,84 @@ function App() {
         {connected && <p>Score: {score}</p>}
         
         <div className='horizontal'>
-          { connected && <div className='box'></div> }
+          <div className="presetSection box">
+            {/*Checkbox list - allows users to choose what chords they want to be tested on */}
+            <div className="checklist-container">
+              <div className="checklist">
+                <h3>Root Chords</h3>
+                {(roots as ChordName[]).map(c => (
+                  <div key={c}>
+                    <label htmlFor={c}>{c}</label>
+                    <input type="checkbox" 
+                      name={c} 
+                      value={c} 
+                      id={c} 
+                      checked={selectedChords.has(c)} 
+                      onChange={() => toggleChord(c)}
+                      //handling right click event
+                      onContextMenu={(e) => {
+                        e.preventDefault(); //stops default menu coming up
+                        isolateChord(c);
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+              
+              <div className="checklist">
+                <h3>Sevenths</h3>
+                {(sevenths as ChordName[]).map(c => (
+                  <div key={c}>
+                    <label htmlFor={c}>{c}</label>
+                    <input type="checkbox" 
+                      name={c} 
+                      value={c} 
+                      id={c} 
+                      checked={selectedChords.has(c)} 
+                      onChange={() => toggleChord(c)}
+                      //handling right click event
+                      onContextMenu={(e) => {
+                        e.preventDefault(); //stops default menu coming up
+                        isolateChord(c);
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+              
+              <div className="checklist">
+                <h3>Extensions</h3>
+                {(extensions as ChordName[]).map(c => (
+                  <div key={c}>
+                    <label htmlFor={c}>{c}</label>
+                    <input type="checkbox" 
+                      name={c} 
+                      value={c} 
+                      id={c} 
+                      checked={selectedChords.has(c)} 
+                      onChange={() => toggleChord(c)}
+                      //handling right click event
+                      onContextMenu={(e) => {
+                        e.preventDefault(); //stops default menu coming up
+                        isolateChord(c);
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/**Button List */}
+            <div className="buttonContainer">
+              <h3>Presets</h3>
+              <div className="buttonList">
+                <button onClick={() => editChordList(Object.keys(chordMap) as ChordName[])}>Select All</button>
+                <button onClick={() => editChordList(roots as ChordName[])}>Only Roots</button>
+                <button onClick={() => editChordList(sevenths as ChordName[])}>Only Sevenths</button>
+                <button onClick={() => editChordList(extensions as ChordName[])}>Only Extensions</button>
+              </div>
+              
+            </div>
+          </div>
           <div className='box'>
             <h1>Chord</h1>
             {/* Show chord name */}
@@ -162,83 +239,8 @@ function App() {
           {finished? "Start" : "Finish"}
         </button>
         <p><i className="fa-solid fa-circle-info"></i> {midiMessage}</p>
-
-        {/*Checkbox list - allows users to choose what chords they want to be tested on */}
-        <div className="checklist-container">
-          <div className="checklist">
-            <h3>Root Chords</h3>
-            {(roots as ChordName[]).map(c => (
-              <div key={c}>
-                <label htmlFor={c}>{c}</label>
-                <input type="checkbox" 
-                  name={c} 
-                  value={c} 
-                  id={c} 
-                  checked={selectedChords.has(c)} 
-                  onChange={() => toggleChord(c)}
-                  //handling right click event
-                  onContextMenu={(e) => {
-                    e.preventDefault(); //stops default menu coming up
-                    isolateChord(c);
-                  }}
-                />
-              </div>
-            ))}
-          </div>
-          
-          <div className="checklist">
-            <h3>Sevenths</h3>
-            {(sevenths as ChordName[]).map(c => (
-              <div key={c}>
-                <label htmlFor={c}>{c}</label>
-                <input type="checkbox" 
-                  name={c} 
-                  value={c} 
-                  id={c} 
-                  checked={selectedChords.has(c)} 
-                  onChange={() => toggleChord(c)}
-                  //handling right click event
-                  onContextMenu={(e) => {
-                    e.preventDefault(); //stops default menu coming up
-                    isolateChord(c);
-                  }}
-                />
-              </div>
-            ))}
-          </div>
-          
-          <div className="checklist">
-            <h3>Extensions</h3>
-            {(extensions as ChordName[]).map(c => (
-              <div key={c}>
-                <label htmlFor={c}>{c}</label>
-                <input type="checkbox" 
-                  name={c} 
-                  value={c} 
-                  id={c} 
-                  checked={selectedChords.has(c)} 
-                  onChange={() => toggleChord(c)}
-                  //handling right click event
-                  onContextMenu={(e) => {
-                    e.preventDefault(); //stops default menu coming up
-                    isolateChord(c);
-                  }}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-        {/**Button List */}
-        <div className="buttonContainer">
-          <h3>Presets</h3>
-          <div className="buttonList">
-            <button onClick={() => editChordList(Object.keys(chordMap) as ChordName[])}>Select All</button>
-            <button onClick={() => editChordList(roots as ChordName[])}>Only Roots</button>
-            <button onClick={() => editChordList(sevenths as ChordName[])}>Only Sevenths</button>
-            <button onClick={() => editChordList(extensions as ChordName[])}>Only Extensions</button>
-          </div>
-          
-        </div>
+        
+        
         
       </div>
     </>

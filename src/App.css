@@ -78,11 +78,11 @@ button {
 .horizontal {
   display: flex;
   justify-content: center;
-  gap: 30px;
+  gap: 70px;
 }
 
 .box {
-  width:300px;
+  width: 300px;
 }
 
 .disconnectedBox {
@@ -96,4 +96,15 @@ button {
 
 .incorrect {
   color: red;
+}
+
+.buttonContainer {
+  justify-items: center;
+}
+
+.buttonList {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /*1fr is an equal fraction of the available space*/
+  gap: 20px;
+  margin: 20px;
 }
