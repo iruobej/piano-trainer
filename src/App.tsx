@@ -1,5 +1,5 @@
 // Everything that affects the UI is in this file
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
 import Navbar from './components/Navbar.tsx';
 import useMidi from './externalFiles/useMidi.ts';
@@ -84,8 +84,22 @@ function App() {
   }
 
   const roots = ["major", "minor", "dim", "aug", "sus2", "sus4"];
-  const sevenths = ["maj7", "min7", "aug7", "dim7", "halfdim7", "minMaj7"]
-  const extensions = ["maj9", "min9", "maj11", "min11", "maj13", "min13"]
+  const sevenths = ["maj7", "min7", "aug7", "dim7", "halfdim7", "minMaj7"];
+  const extensions = ["maj9", "min9", "maj11", "min11", "maj13", "min13"];
+
+  // If there is any change to the number of seconds or types of chords, the game must stop.
+  useEffect(() => {
+    setFinished(true);
+    //Stop timer
+    setRunning(false);
+    if (score > playerData.highscore) {
+      setPlayerData(prev => ({
+        ...prev,
+        highscore: score
+      }));
+    }
+    setScore(0);
+  }, [selectedChords, selectedNumber]);
   
   
   return (
@@ -222,7 +236,7 @@ function App() {
           // Because setFinished(!finished) doesnt update immediately, must assign to variable and use that instead (nextFinished)
           const nextFinished = !finished; 
           setFinished(nextFinished);
-
+          // If finished = true
           if (nextFinished) {
             //Stop timer
             setRunning(false);
